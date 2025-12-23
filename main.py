@@ -7,6 +7,7 @@ from api.router.agent_router import agent_router
 from google.cloud import modelarmor_v1
 from google.api_core.client_options import ClientOptions
 from contextlib import asynccontextmanager
+from guardrails.modelarmorutils import create_model_armor_client
 
 # --- Configuration and Initialization ---
 
@@ -32,23 +33,6 @@ def load_globals():
     globals.template_id = os.getenv("TEMPLATE_ID", "")
     globals.model_armor_api_endpoint_uri = f"modelarmor.{globals.location_id}.rep.googleapis.com"
     globals.faq_data_store_id = os.getenv("FAQ_DATA_STORE_ID", "")
-
-def create_model_armor_client() -> modelarmor_v1.ModelArmorClient:
-    """
-    Creates and returns a ModelArmorClient for interacting with Google Cloud's Model Armor API.
-
-    Returns:
-        modelarmor_v1.ModelArmorClient: An instance of the ModelArmorClient configured with REST transport
-        and the appropriate API endpoint.
-    """
-    client_options = ClientOptions(
-        api_endpoint=globals.model_armor_api_endpoint_uri
-    )
-    model_armor_client = modelarmor_v1.ModelArmorClient(
-        transport=globals.model_armor_client_transport,
-        client_options=client_options,
-    )
-    return model_armor_client
 
 # --- FastAPI Lifecycle Hook using Lifespan ---
 
