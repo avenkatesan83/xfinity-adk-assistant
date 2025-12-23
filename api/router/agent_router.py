@@ -1,12 +1,10 @@
 import globals
-import time
-import uuid
 from fastapi import APIRouter, HTTPException
 from agents.root.customer_support_agent import Runner, InMemoryRunner
-from google.genai.types import Content, Part
 from api.schema.agent_schema import QueryRequest, QueryResponse
 from api.schema.session_schema import SessionResponse
 from api.controller.agent_controller import process_new_session, process_user_query
+from background_tasks.memory_manager import trigger_memory_generation
 
 # Initialize the APIRouter
 agent_router = APIRouter(
@@ -48,6 +46,10 @@ async def handle_query(request: QueryRequest):
         print("\n🚀 Rotuing a request to ADK agent for handling user query")        
         # Handle the user query
         agentResponse = await process_user_query(request.session_id, request.prompt)
+
+        # Background task: Add the session to the memory service (Vertex AI memory bank) after each query
+        await trigger_memory_generation(request.session_id)
+
         return QueryResponse(response=agentResponse)
     
     except Exception as e:

@@ -4,6 +4,7 @@ from google.adk.tools.function_tool import FunctionTool
 from agents.sub import billing_agent, outage_agent, faq_support_agent
 from tools.user_identification_tool import validate_ph_no, validate_zip_code, get_account_information, exit_agent
 from callbacks.callback_listeners import before_model_processor, after_model_processor
+from google.adk.tools import preload_memory
 import globals
 
 def create_agent() -> Agent:
@@ -55,7 +56,8 @@ def create_agent() -> Agent:
         tools=[FunctionTool(validate_ph_no), 
                FunctionTool(validate_zip_code), 
                FunctionTool(get_account_information),
-               FunctionTool(exit_agent)],
+               FunctionTool(exit_agent),
+               preload_memory],
         before_model_callback=before_model_processor,
         after_model_callback=after_model_processor
     )

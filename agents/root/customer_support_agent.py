@@ -1,9 +1,11 @@
 from google.adk.agents import Agent
 from google.adk.models.google_llm import Gemini
 from google.adk.runners import Runner, InMemoryRunner
-from google.adk.sessions import InMemorySessionService
+from google.adk.sessions import InMemorySessionService, VertexAiSessionService
 from callbacks.callback_listeners import before_model_processor, after_model_processor
 from agents.sub import user_identification_agent
+from google.adk.memory import VertexAiMemoryBankService
+import vertexai
 import globals
 
 print("✅ ADK components imported successfully.")
@@ -73,12 +75,48 @@ async def initialize_runner() -> Runner:
                 "GOOGLE_API_KEY environment variable not set and GOOGLE_GENAI_USE_VERTEXAI is not TRUE."
             )
 
+
+    vertex_client = vertexai.Client(
+        project=globals.project_id,
+        location=globals.agent_engine_location_id
+        )
+    # If you don't have an Agent Engine instance already, create an Agent Engine
+    # Memory Bank instance using the default configuration.
+    agent_engine = vertex_client.agent_engines.create()
+
+    # Optionally, print out the Agent Engine resource name. You will need the
+    # resource name to interact with your Agent Engine instance later on.
+    print(f"Agent Engine resource name: {agent_engine.api_resource.name}")
+
+    globals.agent_engine_id = agent_engine.api_resource.name.split("/")[-1]
+    print(f"Agent Engine ID: {globals.agent_engine_id}")
+
+    globals.memory_service = VertexAiMemoryBankService(
+        project=globals.project_id,
+        location=globals.agent_engine_location_id,
+        agent_engine_id=globals.agent_engine_id
+    )
+
+
+
+
+
     customer_support_agent = create_agent()
-    globals.session_service = InMemorySessionService()
+
+    # Use the below only for prototyping (InMemorySessionService)
+    #globals.session_service = InMemorySessionService()
+
+    # Use the below only for Production grade (VertexAiSessionService)
+    globals.session_service = VertexAiSessionService(
+        project=globals.project_id,
+        location=globals.agent_engine_location_id,
+        agent_engine_id=globals.agent_engine_id
+    )
     runner = Runner(
         agent=customer_support_agent,
         app_name=globals.app_name,
-        session_service=globals.session_service
+        session_service=globals.session_service,
+        memory_service=globals.memory_service
         )
-    print("✅ ADK Runner initialized with InMemorySessionService.")
+    print("✅ ADK Runner initialized with VertexAISessionService.")
     return runner

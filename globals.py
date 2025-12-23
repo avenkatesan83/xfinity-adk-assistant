@@ -1,5 +1,6 @@
 from google.adk.runners import Runner, InMemoryRunner
-from google.adk.sessions import InMemorySessionService
+from google.adk.sessions import InMemorySessionService, VertexAiSessionService
+from google.adk.memory import VertexAiMemoryBankService
 from google.genai import types
 from google.cloud import modelarmor_v1
 
@@ -12,10 +13,14 @@ welcome_event: str = "WELCOME_EVENT"
 # It will be set later in main.py's startup event.
 #global_runner: InMemoryRunner = None
 global_runner: Runner = None
-session_service: InMemorySessionService = None
+#session_service: InMemorySessionService = None
+session_service: VertexAiSessionService = None
+memory_service: VertexAiMemoryBankService = None
 
 # -- Google Vertex AI related globals --
 google_vertexai_use_vertexai: str = None
+agent_engine_location_id: str = "us-central1"
+agent_engine_id: str = None
 google_api_key: str = None
 llm_model_name: str = "gemini-2.5-flash-lite"
 
