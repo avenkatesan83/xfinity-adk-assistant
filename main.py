@@ -2,12 +2,12 @@ import globals
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from agents.root.customer_support_agent import initialize_runner, MissingAPIKeyError
+from utils.adkrunnerutils import initialize_runner, MissingAPIKeyError, MissingAgentEngineIdError
 from api.router.agent_router import agent_router
-from google.cloud import modelarmor_v1
-from google.api_core.client_options import ClientOptions
 from contextlib import asynccontextmanager
-from guardrails.modelarmorutils import create_model_armor_client
+from utils.modelarmorutils import initialize_model_armor_client
+from utils.datastoreutils import initialize_datastore_client
+from utils.vertextaiutils import initialize_vertexai_client
 
 # --- Configuration and Initialization ---
 
@@ -30,6 +30,8 @@ def load_globals():
     globals.google_api_key = os.getenv("GOOGLE_API_KEY", "")
     globals.project_id = os.getenv("PROJECT_ID", "")
     globals.location_id = os.getenv("LOCATION_ID", "")
+    globals.agent_engine_id = os.getenv("VERTEX_AGENT_ENGINE_ID", "")
+    globals.discovery_engine_api_endpoint = os.getenv("DISCOVERY_ENGINE_API_ENDPOINT", "")
     globals.template_id = os.getenv("TEMPLATE_ID", "")
     globals.model_armor_api_endpoint_uri = f"modelarmor.{globals.location_id}.rep.googleapis.com"
     globals.faq_data_store_id = os.getenv("FAQ_DATA_STORE_ID", "")
@@ -45,19 +47,28 @@ async def lifespan(app: FastAPI):
     try:
         load_globals()
         print("✅ Global configuration loaded.")
-        # Model armor client initialization
-        print("\n🚀 Creating Model Armor Client...")
-        globals.model_armor_client = create_model_armor_client()
-        print("✅ Model Armor Client created.")
-        # Agent Initialization
+        
+        print("\n🚀 Initializng Model Armor Client...")
+        initialize_model_armor_client()
+        print("✅ Model Armor Client initialized.")
+        print("\n🚀 Initializing Vertex AI Client...")
+        initialize_vertexai_client()
+        print("✅ Vertex AI Client initialized.")
+        print("\n🚀 Initializing Datastore Client...")
+        initialize_datastore_client()
+        print("✅ Datastore Client initialized.")
         print("\n🚀 Initializing ADK Agent Runner...")
-        globals.global_runner = await initialize_runner()
+        await initialize_runner()
         print("✅ Runner is ready.")
     
     except MissingAPIKeyError as e:
         # Handles missing API key for the Agent Runner
         print(f"❌ Initialization Error: {e}")
         raise RuntimeError("Agent setup failed due to missing API key credentials.") from e
+    except MissingAgentEngineIdError as e:
+        # Handles missing API key for the Agent Runner
+        print(f"❌ Initialization Error: {e}")
+        raise RuntimeError("Agent setup failed due to missing Agent Engine Id.") from e
     except Exception as e:
         # Catch-all for other initialization errors
         print(f"❌ Unknown Initialization Error: {e}")

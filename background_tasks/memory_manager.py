@@ -2,7 +2,7 @@ import globals
 
 async def trigger_memory_generation(sId):
     """
-    Refreshes the session object and adds the session to the memory service.
+    Refreshes the session object and adds the session to the vertex ai memory bank service.
 
     Args:
         app_name (str): The name of the app.
@@ -19,7 +19,8 @@ async def trigger_memory_generation(sId):
             session_id=sId
         )
         await globals.memory_service.add_session_to_memory(session)
-        print(f"Added session to memory: {session}")
+        #print(f"Added session to memory: {session}")
+        print(f"Added session to vertex ai memory bank for sId : {session.id}")
 
     except Exception as e:
         print(f"Memory Manager Error in trigger_memory_generation: {e}")

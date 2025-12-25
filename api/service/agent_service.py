@@ -1,7 +1,6 @@
 import uuid
 import globals
 from fastapi import HTTPException
-from agents.root.customer_support_agent import Runner
 from google.genai.types import Content, Part
 from api.helper.agent_helper import llm_response_to_text
 
@@ -43,10 +42,9 @@ async def handle_user_query(session_id: str, user_prompt: str) -> str:
             user_prompt = globals.default_user_prompt
             
         print(f"User Session ID: {session_id}")
-        runner: Runner = globals.global_runner
         user_message = Content(parts=[Part(text=user_prompt)])
-        # Streaming
-        llmResponse = runner.run_async(user_id=globals.user_id, 
+        # LLM Streaming...
+        llmResponse = globals.global_runner.run_async(user_id=globals.user_id, 
                                                session_id=session_id, 
                                                new_message=user_message)
         return await llm_response_to_text(llmResponse)

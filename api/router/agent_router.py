@@ -1,6 +1,5 @@
 import globals
 from fastapi import APIRouter, HTTPException
-from agents.root.customer_support_agent import Runner, InMemoryRunner
 from api.schema.agent_schema import QueryRequest, QueryResponse
 from api.schema.session_schema import SessionResponse
 from api.controller.agent_controller import process_new_session, process_user_query

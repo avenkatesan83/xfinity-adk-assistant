@@ -1,7 +1,6 @@
 from google.adk.agents import Agent
 from google.adk.models.google_llm import Gemini
-from google.cloud import discoveryengine_v1 as discoveryengine
-from google.api_core.client_options import ClientOptions
+from utils.datastoreutils import search_in_datastore
 import re
 import globals
 
@@ -24,42 +23,8 @@ def search_faq_datastore(query: str) -> dict:
 
     print(f"Searching FAQ Datastore with query: {query}")
     
-    # Create client with proper endpoint
-    client_options = ClientOptions(
-        api_endpoint="discoveryengine.googleapis.com"
-    )
-    client = discoveryengine.SearchServiceClient(client_options=client_options)
-    
-    # Construct the serving config path - note: use the FULL resource name format
-    serving_config = (
-        "projects/gen-lang-client-0842450978/"
-        "locations/global/"
-        "collections/default_collection/"
-        "dataStores/xfinity-adk-agent-datastore_1766006093362/"
-        "servingConfigs/default_config"
-    )
-    
-    print(f"Using serving_config: {serving_config}")
-    
     try:
-        # Create the search request with content search spec
-        request = discoveryengine.SearchRequest(
-            serving_config=serving_config,
-            query=query,
-            page_size=5,
-            content_search_spec=discoveryengine.SearchRequest.ContentSearchSpec(
-                snippet_spec=discoveryengine.SearchRequest.ContentSearchSpec.SnippetSpec(
-                    return_snippet=True,
-                    max_snippet_count=3
-                ),
-                summary_spec=discoveryengine.SearchRequest.ContentSearchSpec.SummarySpec(
-                    summary_result_count=3,
-                    include_citations=True
-                )
-            )
-        )
-        
-        response = client.search(request)
+        response = search_in_datastore(query)
         results = []
         print(response)
         # Check if there's a summary
