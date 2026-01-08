@@ -54,7 +54,6 @@ def parse_memories_to_dict(memories):
     print("Extracted from memory:", extracted)
     
     return {k: v.group(0) if v else None for k, v in extracted.items()}
-# Result: {'phone_number': '4378309822', 'zip_code': 'L5A 0B1'}
 
 def validate_ph_no(ph_no: str) -> str:
     """
@@ -70,7 +69,7 @@ def validate_ph_no(ph_no: str) -> str:
     """Validates the phone no."""
     print(f"Validating phone number: {ph_no}")
     response = {"status": "invalid", "data": {}}
-    if ph_no == "4378309822":
+    if ph_no == "4378301234":
         response = {"status": "valid", "data": {"ph_no": ph_no}}
         return response
     else:
