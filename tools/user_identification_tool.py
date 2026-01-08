@@ -1,3 +1,61 @@
+import globals
+import re
+
+def get_user_data_from_memory() -> dict:
+    """
+    Retrieves the user data stored in globals.
+
+    Returns:
+        dict: The user data dictionary.
+    """
+    print("globals user data:", globals.user_data)
+
+    results = parse_memories_to_dict(globals.user_data)
+    print("results:", results) 
+    
+    return results
+
+def get_memory_text_parts(memories):
+    """
+    Extracts all text values from a SearchMemoryResponse or list of MemoryEntry objects.
+    """
+    # 1. Handle the SearchMemoryResponse object seen in your logs
+    if hasattr(memories, 'memories'):
+        memories = memories.memories
+    
+    # 2. Safety check: ensure we now have a list to iterate over
+    if not isinstance(memories, list):
+        print(f"Warning: Expected list after extraction but got {type(memories)}")
+        return []
+
+    results = []
+    for entry in memories:
+        try:
+            # The structure is MemoryEntry -> content -> parts -> [Part(text=...)]
+            if hasattr(entry, 'content') and hasattr(entry.content, 'parts'):
+                for part in entry.content.parts:
+                    if hasattr(part, 'text') and part.text:
+                        results.append(part.text)
+        except Exception as e:
+            print(f"Error parsing entry: {e}")
+            continue
+            
+    return results
+
+def parse_memories_to_dict(memories):
+    text_list = get_memory_text_parts(memories)
+    combined_text = " ".join(text_list)
+    
+    extracted = {
+        "phone_number": re.search(r'(\d{10})', combined_text),
+        "zip_code": re.search(r'([A-Z]\d[A-Z]\s?\d[A-Z]\d)', combined_text)
+    }
+
+    print("Extracted from memory:", extracted)
+    
+    return {k: v.group(0) if v else None for k, v in extracted.items()}
+# Result: {'phone_number': '4378309822', 'zip_code': 'L5A 0B1'}
+
 def validate_ph_no(ph_no: str) -> str:
     """
     Checks if the provided phone number matches the expected value.
@@ -37,36 +95,6 @@ def validate_zip_code(zip_code: str) -> str:
         return response
     else:
         return response
-
-def get_account_information(ph_no, zipcode)-> dict:
-    """
-    Retrieves mock account information for a customer based on phone number and zipcode.
-    Args:
-        ph_no (str): The customer's phone number.
-        zipcode (str): The customer's zipcode.
-    Returns:
-        Dict: A JSON dict containing the account information, including customer ID, account ID, customer type, account status, name, date of birth, address, and phone number.
-    """
-    print(f"Fetching account information for Phone No: {ph_no}, Zipcode: {zipcode}")
-    # Mock response data
-    response_data = {
-        "customer_id": "venky-123",
-        "account_id": "987654321",
-        "customer_type": "Individual",
-        "account_status": "Active",
-        "customer_name": "venky muthu",
-        "customer_dob": "1990-01-01",
-        "customer_address": f"123 Main St Mississauga {zipcode} ON",
-        "customer_ph_no": ph_no
-    }
-    
-    # Create a JSON response
-    response = {
-        "status": "success",
-        "data": response_data
-    }
-    
-    return response
 
 def exit_agent():
     """

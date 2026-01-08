@@ -8,7 +8,6 @@ import vertexai
 
 # -- ADK related globals --
 app_name: str = "Xfinity ADK Agent Demo"
-user_id: str = "venky123"
 welcome_event: str = "WELCOME_EVENT"
 
 # Initialize the global runner variable to None. 
@@ -26,6 +25,7 @@ google_vertexai_use_vertexai: str = None
 agent_engine_location_id: str = "us-central1"
 google_api_key: str = None
 llm_model_name: str = "gemini-2.5-flash-lite"
+user_data: dict = {}
 
 # -- Agent retry config globals --
 retry_config=types.HttpRetryOptions(
@@ -50,3 +50,6 @@ datastore_client: discoveryengine_v1 = None
 
 # -- Default user prompt globals --
 default_user_prompt: str = "Hi"
+
+# -- MCP related globals --
+mcp_server_url: str = "https://my-agent-mcp-824669980508.us-east1.run.app/xfinity_api_mcp"

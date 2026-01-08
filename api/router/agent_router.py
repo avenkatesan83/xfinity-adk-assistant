@@ -1,9 +1,9 @@
 import globals
 from fastapi import APIRouter, HTTPException
 from api.schema.agent_schema import QueryRequest, QueryResponse
-from api.schema.session_schema import SessionResponse
+from api.schema.session_schema import SessionRequest, SessionResponse
 from api.controller.agent_controller import process_new_session, process_user_query
-from background_tasks.memory_manager import trigger_memory_generation
+from background_tasks.memory_manager import trigger_memory_generation, trigger_search_memory
 
 # Initialize the APIRouter
 agent_router = APIRouter(
@@ -12,16 +12,16 @@ agent_router = APIRouter(
 )
 
 @agent_router.post("/newusersession", response_model=SessionResponse)
-async def create_session():
+async def create_session(request: SessionRequest):
     """
     Receives a request to create a new user session id
     Endpoint: /root-agent/newusersession
     """
 
     try:
-        print("\n🚀 Rotuing a request for new user session")        
+        print("\n🚀 Rotuing a request for new user session")      
         # Create a new user session
-        sId = await process_new_session()
+        sId = await process_new_session(request.user_id)
         return SessionResponse(session_id=sId)
     
     except Exception as e:
@@ -42,12 +42,20 @@ async def handle_query(request: QueryRequest):
         )
     
     try:
-        print("\n🚀 Rotuing a request to ADK agent for handling user query")        
+        print("\n🚀 Rotuing a request to ADK agent for handling user query")   
+
+        user_prompt = request.prompt
+        if user_prompt and user_prompt == globals.welcome_event:
+            user_prompt = globals.default_user_prompt
+
+        # Background task: Retrieve the memories (Vertex AI memory bank)
+        globals.user_data = await trigger_search_memory(request.user_id, user_prompt)
+
         # Handle the user query
-        agentResponse = await process_user_query(request.session_id, request.prompt)
+        agentResponse = await process_user_query(request.session_id, request.user_id, user_prompt)
 
         # Background task: Add the session to the memory service (Vertex AI memory bank) after each query
-        await trigger_memory_generation(request.session_id)
+        await trigger_memory_generation(request.session_id, request.user_id)
 
         return QueryResponse(response=agentResponse)
     

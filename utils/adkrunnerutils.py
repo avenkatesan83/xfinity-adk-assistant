@@ -25,7 +25,7 @@ async def initialize_runner() -> None:
         
     if not globals.agent_engine_id:
         raise MissingAgentEngineIdError(
-            "VERTEX_AGENT_ENGINE_ID environment variable not set."
+            "AGENT_ENGINE_ID environment variable not set."
         )
         
     # If you don't have an Agent Engine instance already, create an Agent Engine

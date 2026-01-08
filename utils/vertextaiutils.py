@@ -2,6 +2,7 @@ import globals
 import vertexai
 import time
 
+
 def initialize_vertexai_client() -> None:
     """
     Initializes and returns a Vertex AI client.
@@ -34,9 +35,34 @@ def initialize_vertexai_client() -> None:
 
 
 def create_agent_engine() -> None:
+    # Use the standard model string for embeddings
+    # common: text-embedding-004 or textembedding-gecko@003
+    embedding_model_resource = "projects/gen-lang-client-0842450978/locations/us-central1/publishers/google/models/gemini-embedding-001"
+    llm_model_name = "projects/gen-lang-client-0842450978/locations/us-central1/publishers/google/models/gemini-2.5-flash"
 
-    agent_engine = globals.vertex_client.agent_engines.create()
-    print(f"\n\n✅ Your agent engine is created and agent engine id : {agent_engine.api_resource.name.split('/')[-1]}.\n\n")
+    # Define the memory bank configuration
+    # Note: Structure varies slightly by SDK version; 
+    # check if your version uses 'memory_bank_config' or 'vector_search_config'
+    memory_bank_config = {
+        "similarity_search_config": {
+            "embedding_model": embedding_model_resource
+        },
+        "generation_config": {
+            "model": llm_model_name,
+      }
+    }
+
+    try:
+        agent_engine = globals.vertex_client.agent_engines.create(
+            config={
+                "context_spec": {
+                    "memory_bank_config": memory_bank_config
+                }
+            }
+        )
+        print(f"✅ Agent engine created: {agent_engine.api_resource.name.split('/')[-1]}")
+    except Exception as e:
+        print(f"❌ Failed to create agent engine: {e}")
 
 def delete_all_agent_engines():
     engines = globals.vertex_client.agent_engines.list()
@@ -49,7 +75,7 @@ def delete_all_agent_engines():
         engine_name = engine.api_resource.name
         try:
             print(f"Deleting engine: {engine_name}...")
-            globals.vertex_client.agent_engines.delete(name=engine_name)
+            globals.vertex_client.agent_engines.delete(force=True, name=engine_name)
             print(f"✅ Deleted {engine_name}")
             
             # Wait 7 seconds between deletes to avoid the 10-per-minute limit
@@ -61,7 +87,7 @@ def delete_all_agent_engines():
 
 # In your __main__ block, just call:
 # delete_all_agent_engines()
-
+    
 def main() -> None:
     """
     Main function to demonstrate the usage of the Vertex AI client.

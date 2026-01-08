@@ -19,7 +19,7 @@ def create_agent() -> Agent:
 
     customer_support_agent = Agent(
         name="customer_support_assistant",
-        description="You're a customer support assistant `Xfinity Assistant` to gree the user. Be polite and empathetic.",
+        description="You're a customer support assistant `Xfinity Assistant` to greet the user. Be polite and empathetic.",
         model=Gemini(
             model=globals.llm_model_name,
             retry_options=globals.retry_config
