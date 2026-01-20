@@ -67,6 +67,8 @@ def validate_ph_no(ph_no: str) -> str:
               otherwise 'status' is 'invalid' and 'data' is empty.
     """
     """Validates the phone no."""
+    # Remove leading/trailing whitespace and spaces within the string
+    ph_no = ph_no.strip().replace(" ", "")
     print(f"Validating phone number: {ph_no}")
     response = {"status": "invalid", "data": {}}
     if ph_no == "4378301234":

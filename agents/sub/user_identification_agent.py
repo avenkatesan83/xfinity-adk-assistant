@@ -3,7 +3,8 @@ from google.adk.models.google_llm import Gemini
 from google.adk.tools.function_tool import FunctionTool
 from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
-from agents.sub import billing_agent, outage_agent, faq_support_agent
+from agents.sub import outage_agent, faq_support_agent
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 from tools.user_identification_tool import get_user_data_from_memory, validate_ph_no, validate_zip_code, exit_agent
 from callbacks.callback_listeners import before_model_processor, after_model_processor
 from google.adk.tools import preload_memory
@@ -13,8 +14,15 @@ def create_agent() -> Agent:
 
     # We call create_agent() here to get the Agent instances for the Sub-agents.
     faq_support_agent_instance = faq_support_agent.create_agent()
-    billing_agent_instance = billing_agent.create_agent()
     outage_agent_instance = outage_agent.create_agent()
+    # Create a RemoteA2aAgent that connects to our Product Catalog Agent
+    # This acts as a client-side proxy - the Customer Support Agent can use it like a local agent
+    remote_billing_agent = RemoteA2aAgent(
+        name="billing_agent",
+        description="Remote billing agent from external vendor that provides billing related information for given account number.",
+        # Point to the agent card URL - this is where the A2A protocol metadata lives
+        agent_card=globals.a2a_agent_server_url + globals.agent_card_well_known_path,
+    )
 
     # MCP Server Integration
     mcp_xfinity_api_server = McpToolset(
@@ -41,8 +49,9 @@ def create_agent() -> Agent:
         **0. Memory Check:**
         * **Action 0.1:** At the start of the interaction, call the tool `get_user_data_from_memory` to check for existing user data. 
         * **Action 0.2:** If `phone_number` and `zip_code` are already present in the user data, SKIP Step 1 and Step 2 and proceed directly to **Step 3 (Account Information Retrieval)**.
-        * **Action 0.3:** If `phone_number` or `zip_code` are already present in the user data, then only request the missing information from the user in the subsequent steps.
-        * **Action 0.4:** If the information is missing or incomplete, follow the mandatory procedure below.
+        * **Action 0.3:** If `phone_number` is already present in the user data, SKIP Step 1 and proceed directly to Step 2.
+        * **Action 0.4:** If `zip_code` is already present in the user data, SKIP Step 2 and proceed directly to Step 1.
+        * **Action 0.5:** If the information is missing or incomplete, follow the mandatory procedure below.
 
         **1. Verification Start (Phone Number):**
         * **Action 1.1:** Begin by outputting the exact prompt: "In order to assist you further, I need to verify your identity."
@@ -64,9 +73,11 @@ def create_agent() -> Agent:
         
         **4. Handover to Sub-agents:**
         * **Action 4.1:** After successfully providing the account information, inform the user that they can now ask questions related to billing, outages, or FAQs.
-        * **Action 4.2:** If user says something related to internet, use `FaqSupportAgent` sub-agent to handle FAQs.
+        * **Action 4.2:** If user says something related to billing, use `BillingAgent` sub-agent to handle billing.
+        * **Action 4.3:** If user says something related to outages, use `OutageAgent` sub-agent to handle outages.
+        * **Action 4.4:** If user says something related to internet, use `FaqSupportAgent` sub-agent to handle FAQs.
         """,
-        sub_agents=[faq_support_agent_instance, billing_agent_instance, outage_agent_instance],
+        sub_agents=[faq_support_agent_instance, remote_billing_agent, outage_agent_instance],
         tools=[FunctionTool(validate_ph_no), 
                FunctionTool(validate_zip_code), 
                mcp_xfinity_api_server,

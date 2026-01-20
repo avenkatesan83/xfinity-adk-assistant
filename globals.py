@@ -52,4 +52,8 @@ datastore_client: discoveryengine_v1 = None
 default_user_prompt: str = "Hi"
 
 # -- MCP related globals --
-mcp_server_url: str = "https://my-agent-mcp-824669980508.us-east1.run.app/xfinity_api_mcp"
+mcp_server_url: str = None
+
+# -- A2A agent related globals --
+agent_card_well_known_path: str = None
+a2a_agent_server_url: str = None

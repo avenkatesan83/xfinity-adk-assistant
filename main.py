@@ -35,6 +35,9 @@ def load_globals():
     globals.template_id = os.getenv("TEMPLATE_ID", "")
     globals.model_armor_api_endpoint_uri = f"modelarmor.{globals.location_id}.rep.googleapis.com"
     globals.faq_data_store_id = os.getenv("FAQ_DATA_STORE_ID", "")
+    globals.mcp_server_url = os.getenv("MCP_SERVER_URL", "")
+    globals.agent_card_well_known_path = os.getenv("AGENT_CARD_WELL_KNOWN_PATH", "")
+    globals.a2a_agent_server_url = os.getenv("A2A_AGENT_SERVER_URL", "")
 
 # --- FastAPI Lifecycle Hook using Lifespan ---
 
