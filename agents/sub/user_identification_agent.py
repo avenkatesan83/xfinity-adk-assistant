@@ -73,7 +73,9 @@ def create_agent() -> Agent:
         
         **4. Handover to Sub-agents:**
         * **Action 4.1:** After successfully providing the account information, inform the user that they can now ask questions related to billing, outages, or FAQs.
-        * **Action 4.2:** If user says something related to billing, use `BillingAgent` sub-agent to handle billing.
+        * **Action 4.2:** 4.2 If the user says something related to billing, call the `BillingAgent`. 
+            IMPORTANT: You must pass the USER'S MOST RECENT REQUEST (e.g., "What is my bill for January?") 
+            as the input to the BillingAgent. Do not pass the initial greeting or session start.
         * **Action 4.3:** If user says something related to outages, use `OutageAgent` sub-agent to handle outages.
         * **Action 4.4:** If user says something related to internet, use `FaqSupportAgent` sub-agent to handle FAQs.
         """,
